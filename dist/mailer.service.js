@@ -8,6 +8,23 @@ const previewEmail = require("preview-email");
 const mailer_constant_1 = require("./constants/mailer.constant");
 const mailer_transport_factory_1 = require("./mailer-transport.factory");
 let MailerService = class MailerService {
+    initTemplateAdapter(templateAdapter, transporter) {
+        if (templateAdapter) {
+            transporter.use('compile', (mail, callback) => {
+                if (mail.data.html) {
+                    return callback();
+                }
+                return templateAdapter.compile(mail, callback, this.mailerOptions);
+            });
+            if (this.mailerOptions.preview) {
+                transporter.use('stream', (mail, callback) => {
+                    return previewEmail(mail.data, this.mailerOptions.preview)
+                        .then(() => callback())
+                        .catch(callback);
+                });
+            }
+        }
+    }
     constructor(mailerOptions, transportFactory) {
         this.mailerOptions = mailerOptions;
         this.transportFactory = transportFactory;
@@ -37,23 +54,6 @@ let MailerService = class MailerService {
         if (mailerOptions.transport) {
             this.transporter = this.transportFactory.createTransport();
             this.initTemplateAdapter(this.templateAdapter, this.transporter);
-        }
-    }
-    initTemplateAdapter(templateAdapter, transporter) {
-        if (templateAdapter) {
-            transporter.use('compile', (mail, callback) => {
-                if (mail.data.html) {
-                    return callback();
-                }
-                return templateAdapter.compile(mail, callback, this.mailerOptions);
-            });
-            if (this.mailerOptions.preview) {
-                transporter.use('stream', (mail, callback) => {
-                    return previewEmail(mail.data, this.mailerOptions.preview)
-                        .then(() => callback())
-                        .catch(callback);
-                });
-            }
         }
     }
     sendMail(sendMailOptions) {

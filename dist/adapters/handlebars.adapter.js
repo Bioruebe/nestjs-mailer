@@ -53,7 +53,8 @@ class HandlebarsAdapter {
             data: {},
         });
         if (runtimeOptions.partials) {
-            const files = glob.sync(path.join(runtimeOptions.partials.dir, '**', '*.hbs'));
+            const partialPath = path.join(runtimeOptions.partials.dir, '**', '*.hbs').replace(/\\/g, '/');
+            const files = glob.sync(partialPath);
             files.forEach((file) => {
                 const { templateName, templatePath } = precompile(file, () => { }, runtimeOptions.partials);
                 const templateDir = path.relative(runtimeOptions.partials.dir, path.dirname(templatePath));
